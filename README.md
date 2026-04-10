@@ -12,43 +12,52 @@ For a quick go-live list, see [`DEPLOYMENT_CHECKLIST.md`](./DEPLOYMENT_CHECKLIST
 
 ```mermaid
 flowchart LR
-    user([Broker / User])
-
-    subgraph client[Client Layer]
-        fe[Frontend\nReact + Vite + Tailwind]
-        api[Backend API\nFastAPI + SQLAlchemy]
-    end
+    user([User / Broker])
+    ui[Frontend UI\nReact + Vite]
+    api[Backend API\nFastAPI]
 
     subgraph azure[Azure Resource Group]
-        blob[Blob Storage\nquote-documents]
-        func[Function App\nprocess_quote trigger]
+        storage[Azure Blob Storage\nquote-documents container]
+        function[Azure Function App\nBlob Trigger: process_quote]
+        ai[Azure AI Services\nContent Understanding + GPT]
         db[(Azure PostgreSQL\nquote_comparison)]
-        ai[Azure AI Services\nContent Understanding\n+ GPT models]
-        comm[Communication Services\nEmail notifications]
+        email[Azure Communication Services\nEmail notifications]
     end
 
-    user --> fe
-    fe -->|REST /api| api
-    fe -->|Upload quote documents| api
+    user --> ui
 
-    api -->|Store metadata / app data| db
-    api -->|Upload source files| blob
-    api -->|Direct extraction / analysis| ai
+    %% Flow 1: direct UI/API path
+    ui -->|Direct API requests| api
+    api -->|Read/write app data| db
+    api -->|Optional direct extraction| ai
+    api -->|Return comparisons and quotes| ui
 
-    blob -->|Blob trigger event| func
-    func -->|Read new files| blob
-    func -->|Extract fields| ai
-    func -->|Persist results| db
-    func -->|Send alerts| comm
+    %% Flow 2: event-driven ingestion path
+    ui -->|Upload quote document| api
+    api -->|Store file| storage
+    storage -->|Blob created event| function
+    function -->|Read document| storage
+    function -->|Extract quote fields| ai
+    function -->|Persist extracted data| db
+    function -->|Send notification| email
 ```
 
-### Flow Summary
+### Supported Flows
 
-1. Users upload and review quotes in the React UI.
-2. The FastAPI backend stores app data and handles API requests.
-3. Quote files are stored in Azure Blob Storage.
-4. The Azure Function processes new files, calls Azure AI Services, and writes extracted data to PostgreSQL.
-5. Optional email notifications are sent after processing.
+#### 1. Direct UI/API flow
+
+- The UI calls the FastAPI backend for accounts, properties, quotes, comparisons, and scoring views.
+- The backend reads and writes application data in Azure PostgreSQL.
+- In some cases, the backend can also call Azure AI Services directly for analysis or extraction support.
+- The UI renders data returned from the database-backed API.
+
+#### 2. Azure event-driven document processing flow
+
+- A user uploads a quote document from the UI.
+- The backend stores the file in Azure Blob Storage.
+- Blob creation triggers the Azure Function App.
+- The Function reads the document, calls Azure AI Services, extracts quote fields, and writes normalized results to Azure PostgreSQL.
+- Optional email notifications are sent after successful processing.
 
 ## Tech Stack
 
