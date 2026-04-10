@@ -1,3 +1,4 @@
+# Supports deployment from both org and personal GitHub repositories.
 name: Deploy App to Azure
 
 on:
