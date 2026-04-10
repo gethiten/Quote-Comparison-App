@@ -36,14 +36,14 @@ env:
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-quote-comparison' }}
-  AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'centralus' }}
-  AZURE_FUNCTIONAPP_NAME: ${{ vars.AZURE_FUNCTIONAPP_NAME || 'quotecompare-func' }}
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'quotecompare-api' }}
-  AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_CONTAINER_REGISTRY || 'quotecompareacr2026' }}
-  AZURE_BACKEND_IMAGE_NAME: ${{ vars.AZURE_BACKEND_IMAGE_NAME || 'quotecompare-api' }}
-  AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT || 'quotecomparestr2026' }}
-  FRONTEND_API_BASE_URL: ${{ vars.FRONTEND_API_BASE_URL || 'https://quotecompare-api.azurewebsites.net/api' }}
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  AZURE_FUNCTIONAPP_NAME: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+  AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_CONTAINER_REGISTRY }}
+  AZURE_BACKEND_IMAGE_NAME: ${{ vars.AZURE_BACKEND_IMAGE_NAME }}
+  AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
+  FRONTEND_API_BASE_URL: ${{ vars.FRONTEND_API_BASE_URL }}
 
 jobs:
   build_frontend:
@@ -109,10 +109,10 @@ jobs:
     needs: build_frontend
     if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.deploy_backend == 'true' }}
     env:
-      AZURE_RG: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-quote-comparison' }}
-      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'quotecompare-api' }}
-      ACR_NAME: ${{ vars.AZURE_CONTAINER_REGISTRY || 'quotecompareacr2026' }}
-      IMAGE_NAME: ${{ vars.AZURE_BACKEND_IMAGE_NAME || 'quotecompare-api' }}
+      AZURE_RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+      ACR_NAME: ${{ vars.AZURE_CONTAINER_REGISTRY }}
+      IMAGE_NAME: ${{ vars.AZURE_BACKEND_IMAGE_NAME }}
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
