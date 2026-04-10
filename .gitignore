@@ -1,0 +1,50 @@
+# --- Secrets & environment files ---
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.pfx
+*.crt
+*.cer
+*.p12
+*.secret
+secrets.*
+*.local.bicepparam
+*.local.parameters.json
+
+# Azure / request debug artifacts
+func_app/cu_response_headers.txt
+func_app/cu_request.json
+
+# --- Python ---
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+**/htmlcov/
+**/.venv/
+**/venv/
+**/.python_packages/
+
+# --- Node / frontend build output ---
+frontend/node_modules/
+frontend/dist/
+.vite/
+**/.vite/
+
+# --- Local uploads, logs, temp files ---
+local-uploads/
+backend/local-uploads/
+func_app/func_logs/
+func_app/func_logs.zip
+*.log
+*.tmp
+*.cache
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/

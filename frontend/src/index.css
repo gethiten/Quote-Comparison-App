@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-slate-100 text-slate-800 antialiased; }
+  * { @apply box-border; }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { @apply bg-slate-100; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded; }
+}

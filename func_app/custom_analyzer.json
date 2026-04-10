@@ -1,0 +1,122 @@
+{
+  "description": "Custom analyzer for extracting insurance quote fields from PDF, Excel, and Word documents",
+  "baseAnalyzerId": "prebuilt-document",
+  "models": {
+    "completion": "gpt-4.1",
+    "embedding": "text-embedding-3-large"
+  },
+  "fieldSchema": {
+    "fields": {
+      "CarrierName": {
+        "type": "string",
+        "method": "extract",
+        "description": "Insurance carrier or company name (e.g., Travelers, AIG, Zurich, Chubb, CNA, Hartford, Liberty Mutual)"
+      },
+      "QuoteNumber": {
+        "type": "string",
+        "method": "extract",
+        "description": "Quote number, policy number, or reference number"
+      },
+      "QuoteDate": {
+        "type": "date",
+        "method": "extract",
+        "description": "Date the quote was issued or generated"
+      },
+      "EffectiveDate": {
+        "type": "date",
+        "method": "extract",
+        "description": "Policy effective date, start date, or inception date"
+      },
+      "ExpiryDate": {
+        "type": "date",
+        "method": "extract",
+        "description": "Policy expiration date, end date, or renewal date"
+      },
+      "BuildingLimit": {
+        "type": "number",
+        "method": "extract",
+        "description": "Building coverage limit, property limit, or building value in dollars"
+      },
+      "ValuationBasis": {
+        "type": "string",
+        "method": "extract",
+        "description": "Valuation basis: Replacement Cost (RC), Actual Cash Value (ACV), or Agreed Value"
+      },
+      "CoverageForm": {
+        "type": "string",
+        "method": "extract",
+        "description": "Coverage form type: Special, Broad, or Basic perils"
+      },
+      "Coinsurance": {
+        "type": "number",
+        "method": "extract",
+        "description": "Coinsurance percentage (e.g., 80, 90, 100)"
+      },
+      "BPPLimit": {
+        "type": "number",
+        "method": "extract",
+        "description": "Business Personal Property limit or contents coverage limit in dollars"
+      },
+      "BusinessInterruptionLimit": {
+        "type": "number",
+        "method": "extract",
+        "description": "Business interruption limit, business income limit, or loss of income limit in dollars"
+      },
+      "BIPeriodMonths": {
+        "type": "number",
+        "method": "extract",
+        "description": "Business interruption indemnity period or restoration period in months"
+      },
+      "GLPerOccurrence": {
+        "type": "number",
+        "method": "extract",
+        "description": "General liability per occurrence limit or each occurrence limit in dollars"
+      },
+      "GLAggregate": {
+        "type": "number",
+        "method": "extract",
+        "description": "General liability aggregate limit or general aggregate in dollars"
+      },
+      "AOPDeductible": {
+        "type": "number",
+        "method": "extract",
+        "description": "All Other Perils deductible or standard property deductible in dollars"
+      },
+      "WindHailDeductiblePct": {
+        "type": "number",
+        "method": "extract",
+        "description": "Wind/hail deductible percentage, windstorm deductible, or named storm deductible as a percentage"
+      },
+      "FloodLimit": {
+        "type": "number",
+        "method": "extract",
+        "description": "Flood coverage limit in dollars"
+      },
+      "EarthquakeLimit": {
+        "type": "number",
+        "method": "extract",
+        "description": "Earthquake coverage limit in dollars"
+      },
+      "EquipmentBreakdown": {
+        "type": "string",
+        "method": "extract",
+        "description": "Equipment breakdown coverage: Included, Excluded, or the coverage limit amount"
+      },
+      "OrdinanceOrLaw": {
+        "type": "string",
+        "method": "extract",
+        "description": "Ordinance or law coverage, building code coverage: Included, Excluded, or the coverage limit amount"
+      },
+      "AnnualPremium": {
+        "type": "number",
+        "method": "extract",
+        "description": "Total annual premium, total premium, or quoted premium amount in dollars"
+      },
+      "UnderwritingNotes": {
+        "type": "string",
+        "method": "extract",
+        "description": "Underwriting notes, conditions, special terms, remarks, or exclusions"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+.git*
+.vscode
+__azurite*
+local.settings.json
+test_*.py
+create_*.py
+setup_*.py
+*.pdf
+*.zip
+analyzer_*.json
+cu_*.json
+cu_*.txt
+custom_analyzer.json
+func_logs/
+func_logs.zip
+seed_test.py
+.python_packages/

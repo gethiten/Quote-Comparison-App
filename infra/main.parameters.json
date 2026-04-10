@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "centralus"
+    },
+    "aiLocation": {
+      "value": "eastus"
+    },
+    "environmentName": {
+      "value": "dev"
+    },
+    "storageAccountName": {
+      "value": "quotecomparestr2026"
+    },
+    "blobContainerName": {
+      "value": "quote-documents"
+    },
+    "postgresServerName": {
+      "value": "quotecompare-pgserver"
+    },
+    "postgresDatabaseName": {
+      "value": "quote_comparison"
+    },
+    "dbAdminLogin": {
+      "value": "quoteadmin"
+    },
+    "dbAdminPassword": {
+      "value": "REPLACE_AT_DEPLOY_TIME"
+    },
+    "allowedClientIp": {
+      "value": ""
+    },
+    "functionPlanName": {
+      "value": "quotecompare-plan"
+    },
+    "functionAppName": {
+      "value": "quotecompare-func"
+    },
+    "backendPlanName": {
+      "value": "quotecompare-api-plan"
+    },
+    "backendWebAppName": {
+      "value": "quotecompare-api"
+    },
+    "enableBackendWebApp": {
+      "value": false
+    },
+    "aiAccountName": {
+      "value": "quotecompare-cu"
+    },
+    "foundryProjectName": {
+      "value": "quotecompare-project"
+    },
+    "communicationServiceName": {
+      "value": "quotecompare-comm"
+    },
+    "emailServiceName": {
+      "value": "quotecompare-email"
+    },
+    "emailDomainName": {
+      "value": "AzureManagedDomain"
+    },
+    "openAiDeploymentName": {
+      "value": "gpt-4.1"
+    },
+    "openAiMiniDeploymentName": {
+      "value": "gpt-4.1-mini"
+    },
+    "embeddingDeploymentName": {
+      "value": "text-embedding-3-large"
+    },
+    "openAiDeploymentVersion": {
+      "value": "2025-04-14"
+    },
+    "openAiMiniDeploymentVersion": {
+      "value": "2025-04-14"
+    },
+    "embeddingDeploymentVersion": {
+      "value": "1"
+    },
+    "openAiDeploymentCapacity": {
+      "value": 10
+    },
+    "openAiMiniDeploymentCapacity": {
+      "value": 10
+    },
+    "embeddingDeploymentCapacity": {
+      "value": 120
+    },
+    "contentUnderstandingAnalyzerId": {
+      "value": "insuranceQuoteExtractor"
+    },
+    "notificationEmail": {
+      "value": "replace-me@example.com"
+    },
+    "communicationSender": {
+      "value": "replace-me@contoso.com"
+    }
+  }
+}

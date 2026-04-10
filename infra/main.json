@@ -1,0 +1,878 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.39.26.7824",
+      "templateHash": "11874682402457848832"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Primary Azure region for the app resources."
+      }
+    },
+    "aiLocation": {
+      "type": "string",
+      "defaultValue": "eastus",
+      "metadata": {
+        "description": "Region for Azure AI Services / Content Understanding."
+      }
+    },
+    "environmentName": {
+      "type": "string",
+      "defaultValue": "dev",
+      "allowedValues": [
+        "dev",
+        "test",
+        "prod"
+      ],
+      "metadata": {
+        "description": "Deployment environment tag."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "quotecomparestr2026",
+      "metadata": {
+        "description": "Azure Storage account name for uploaded quote documents and optional static website hosting."
+      }
+    },
+    "blobContainerName": {
+      "type": "string",
+      "defaultValue": "quote-documents",
+      "metadata": {
+        "description": "Blob container that stores quote documents."
+      }
+    },
+    "postgresServerName": {
+      "type": "string",
+      "defaultValue": "quotecompare-pgserver",
+      "metadata": {
+        "description": "PostgreSQL flexible server name."
+      }
+    },
+    "postgresDatabaseName": {
+      "type": "string",
+      "defaultValue": "quote_comparison",
+      "metadata": {
+        "description": "Application database name."
+      }
+    },
+    "dbAdminLogin": {
+      "type": "string",
+      "defaultValue": "quoteadmin",
+      "metadata": {
+        "description": "PostgreSQL administrator login name."
+      }
+    },
+    "dbAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "PostgreSQL administrator password."
+      }
+    },
+    "allowedClientIp": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Optional client IP address to allow through the PostgreSQL firewall. Leave blank to skip."
+      }
+    },
+    "functionPlanName": {
+      "type": "string",
+      "defaultValue": "quotecompare-plan",
+      "metadata": {
+        "description": "Linux App Service plan name for the Azure Function."
+      }
+    },
+    "functionAppName": {
+      "type": "string",
+      "defaultValue": "quotecompare-func",
+      "metadata": {
+        "description": "Azure Function App name."
+      }
+    },
+    "backendPlanName": {
+      "type": "string",
+      "defaultValue": "quotecompare-api-plan",
+      "metadata": {
+        "description": "Linux App Service plan name for the FastAPI backend."
+      }
+    },
+    "backendWebAppName": {
+      "type": "string",
+      "defaultValue": "quotecompare-api",
+      "metadata": {
+        "description": "FastAPI backend Web App name."
+      }
+    },
+    "enableBackendWebApp": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to provision the FastAPI backend Web App."
+      }
+    },
+    "aiAccountName": {
+      "type": "string",
+      "defaultValue": "quotecompare-cu",
+      "metadata": {
+        "description": "Azure AI Services account name used for Azure OpenAI and Content Understanding."
+      }
+    },
+    "foundryProjectName": {
+      "type": "string",
+      "defaultValue": "quotecompare-project",
+      "metadata": {
+        "description": "Azure AI Foundry project name hosted under the AI Services account."
+      }
+    },
+    "communicationServiceName": {
+      "type": "string",
+      "defaultValue": "quotecompare-comm",
+      "metadata": {
+        "description": "Azure Communication Services resource name."
+      }
+    },
+    "emailServiceName": {
+      "type": "string",
+      "defaultValue": "quotecompare-email",
+      "metadata": {
+        "description": "Azure Communication Email Service resource name."
+      }
+    },
+    "emailDomainName": {
+      "type": "string",
+      "defaultValue": "AzureManagedDomain",
+      "metadata": {
+        "description": "Managed email domain resource name."
+      }
+    },
+    "openAiDeploymentName": {
+      "type": "string",
+      "defaultValue": "gpt-4.1",
+      "metadata": {
+        "description": "Primary Azure OpenAI deployment name used by the app."
+      }
+    },
+    "openAiMiniDeploymentName": {
+      "type": "string",
+      "defaultValue": "gpt-4.1-mini",
+      "metadata": {
+        "description": "Secondary lightweight Azure OpenAI deployment name used for fallback and CU scenarios."
+      }
+    },
+    "embeddingDeploymentName": {
+      "type": "string",
+      "defaultValue": "text-embedding-3-large",
+      "metadata": {
+        "description": "Embedding model deployment name used by Content Understanding."
+      }
+    },
+    "openAiDeploymentVersion": {
+      "type": "string",
+      "defaultValue": "2025-04-14",
+      "metadata": {
+        "description": "Model version for the primary GPT deployment."
+      }
+    },
+    "openAiMiniDeploymentVersion": {
+      "type": "string",
+      "defaultValue": "2025-04-14",
+      "metadata": {
+        "description": "Model version for the lightweight GPT deployment."
+      }
+    },
+    "embeddingDeploymentVersion": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Model version for the embeddings deployment."
+      }
+    },
+    "openAiDeploymentCapacity": {
+      "type": "int",
+      "defaultValue": 10,
+      "metadata": {
+        "description": "Capacity for the primary GPT deployment."
+      }
+    },
+    "openAiMiniDeploymentCapacity": {
+      "type": "int",
+      "defaultValue": 10,
+      "metadata": {
+        "description": "Capacity for the lightweight GPT deployment."
+      }
+    },
+    "embeddingDeploymentCapacity": {
+      "type": "int",
+      "defaultValue": 120,
+      "metadata": {
+        "description": "Capacity for the embeddings deployment."
+      }
+    },
+    "contentUnderstandingAnalyzerId": {
+      "type": "string",
+      "defaultValue": "insuranceQuoteExtractor",
+      "metadata": {
+        "description": "Content Understanding analyzer identifier."
+      }
+    },
+    "notificationEmail": {
+      "type": "string",
+      "defaultValue": "replace-me@example.com",
+      "metadata": {
+        "description": "Notification email address used by the Function App after quote processing."
+      }
+    },
+    "communicationSender": {
+      "type": "string",
+      "defaultValue": "replace-me@contoso.com",
+      "metadata": {
+        "description": "Azure Communication Services sender email address used by the Function App."
+      }
+    },
+    "postgresSkuName": {
+      "type": "string",
+      "defaultValue": "Standard_B1ms",
+      "metadata": {
+        "description": "PostgreSQL compute SKU name."
+      }
+    },
+    "appServiceSkuName": {
+      "type": "string",
+      "defaultValue": "B1",
+      "metadata": {
+        "description": "App Service SKU for the backend and Function App plans."
+      }
+    }
+  },
+  "variables": {
+    "tags": {
+      "app": "quote-comparison-app",
+      "environment": "[parameters('environmentName')]",
+      "managedBy": "bicep"
+    },
+    "aiEndpoint": "[format('https://{0}.cognitiveservices.azure.com/', parameters('aiAccountName'))]",
+    "postgresFqdn": "[format('{0}.postgres.database.azure.com', parameters('postgresServerName'))]",
+    "databaseUrl": "[format('postgresql://{0}:{1}@{2}:5432/{3}?sslmode=require', parameters('dbAdminLogin'), parameters('dbAdminPassword'), variables('postgresFqdn'), parameters('postgresDatabaseName'))]",
+    "storageDnsSuffix": "[environment().suffixes.storage]",
+    "blobServiceUri": "[format('https://{0}.blob.{1}', parameters('storageAccountName'), variables('storageDnsSuffix'))]",
+    "queueServiceUri": "[format('https://{0}.queue.{1}', parameters('storageAccountName'), variables('storageDnsSuffix'))]",
+    "storageBlobReaderRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1')]",
+    "storageBlobContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+    "storageQueueContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
+    "storageAccountContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')]",
+    "storageBlobOwnerRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')]",
+    "cognitiveServicesUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "accessTier": "Hot",
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}', parameters('storageAccountName'), 'default')]",
+      "properties": {
+        "deleteRetentionPolicy": {
+          "enabled": true,
+          "days": 7
+        },
+        "containerDeleteRetentionPolicy": {
+          "enabled": true,
+          "days": 7
+        },
+        "changeFeed": {
+          "enabled": true
+        },
+        "isVersioningEnabled": true,
+        "restorePolicy": {
+          "enabled": true,
+          "days": 6
+        },
+        "cors": {
+          "corsRules": []
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('blobContainerName'))]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/queueServices",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}', parameters('storageAccountName'), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableBackendWebApp')]",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[format('{0}-appi', parameters('backendWebAppName'))]",
+      "location": "[parameters('location')]",
+      "kind": "web",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "Application_Type": "web"
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2024-08-01",
+      "name": "[parameters('postgresServerName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('postgresSkuName')]",
+        "tier": "Burstable"
+      },
+      "tags": "[variables('tags')]",
+      "properties": {
+        "version": "16",
+        "administratorLogin": "[parameters('dbAdminLogin')]",
+        "administratorLoginPassword": "[parameters('dbAdminPassword')]",
+        "createMode": "Create",
+        "availabilityZone": "1",
+        "storage": {
+          "storageSizeGB": 32,
+          "autoGrow": "Enabled",
+          "tier": "P4"
+        },
+        "backup": {
+          "backupRetentionDays": 7,
+          "geoRedundantBackup": "Disabled"
+        },
+        "highAvailability": {
+          "mode": "Disabled"
+        },
+        "network": {
+          "publicNetworkAccess": "Enabled"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+      "apiVersion": "2024-08-01",
+      "name": "[format('{0}/{1}', parameters('postgresServerName'), parameters('postgresDatabaseName'))]",
+      "properties": {
+        "charset": "UTF8",
+        "collation": "en_US.utf8"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresServerName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
+      "apiVersion": "2024-08-01",
+      "name": "[format('{0}/{1}', parameters('postgresServerName'), 'AllowAzureServices')]",
+      "properties": {
+        "startIpAddress": "0.0.0.0",
+        "endIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresServerName'))]"
+      ]
+    },
+    {
+      "condition": "[not(empty(parameters('allowedClientIp')))]",
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
+      "apiVersion": "2024-08-01",
+      "name": "[format('{0}/{1}', parameters('postgresServerName'), 'AllowClientIp')]",
+      "properties": {
+        "startIpAddress": "[parameters('allowedClientIp')]",
+        "endIpAddress": "[parameters('allowedClientIp')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresServerName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2025-06-01",
+      "name": "[parameters('aiAccountName')]",
+      "location": "[parameters('aiLocation')]",
+      "kind": "AIServices",
+      "sku": {
+        "name": "S0"
+      },
+      "tags": "[variables('tags')]",
+      "properties": {
+        "customSubDomainName": "[toLower(parameters('aiAccountName'))]",
+        "publicNetworkAccess": "Enabled",
+        "disableLocalAuth": true,
+        "allowProjectManagement": true
+      }
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/projects",
+      "apiVersion": "2025-06-01",
+      "name": "[format('{0}/{1}', parameters('aiAccountName'), parameters('foundryProjectName'))]",
+      "location": "[parameters('aiLocation')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {},
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/deployments",
+      "apiVersion": "2024-10-01",
+      "name": "[format('{0}/{1}', parameters('aiAccountName'), parameters('openAiDeploymentName'))]",
+      "sku": {
+        "name": "GlobalStandard",
+        "capacity": "[parameters('openAiDeploymentCapacity')]"
+      },
+      "properties": {
+        "model": {
+          "format": "OpenAI",
+          "name": "gpt-4.1",
+          "version": "[parameters('openAiDeploymentVersion')]"
+        },
+        "raiPolicyName": "Microsoft.Default",
+        "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/deployments",
+      "apiVersion": "2024-10-01",
+      "name": "[format('{0}/{1}', parameters('aiAccountName'), parameters('openAiMiniDeploymentName'))]",
+      "sku": {
+        "name": "GlobalStandard",
+        "capacity": "[parameters('openAiMiniDeploymentCapacity')]"
+      },
+      "properties": {
+        "model": {
+          "format": "OpenAI",
+          "name": "gpt-4.1-mini",
+          "version": "[parameters('openAiMiniDeploymentVersion')]"
+        },
+        "raiPolicyName": "Microsoft.Default",
+        "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/deployments",
+      "apiVersion": "2024-10-01",
+      "name": "[format('{0}/{1}', parameters('aiAccountName'), parameters('embeddingDeploymentName'))]",
+      "sku": {
+        "name": "GlobalStandard",
+        "capacity": "[parameters('embeddingDeploymentCapacity')]"
+      },
+      "properties": {
+        "model": {
+          "format": "OpenAI",
+          "name": "text-embedding-3-large",
+          "version": "[parameters('embeddingDeploymentVersion')]"
+        },
+        "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Communication/emailServices",
+      "apiVersion": "2023-06-01-preview",
+      "name": "[parameters('emailServiceName')]",
+      "location": "global",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "dataLocation": "UnitedStates"
+      }
+    },
+    {
+      "type": "Microsoft.Communication/emailServices/domains",
+      "apiVersion": "2023-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('emailServiceName'), parameters('emailDomainName'))]",
+      "location": "global",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "domainManagement": "AzureManaged",
+        "userEngagementTracking": "Disabled"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Communication/emailServices', parameters('emailServiceName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Communication/communicationServices",
+      "apiVersion": "2023-04-01",
+      "name": "[parameters('communicationServiceName')]",
+      "location": "global",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "dataLocation": "UnitedStates",
+        "linkedDomains": [
+          "[resourceId('Microsoft.Communication/emailServices/domains', parameters('emailServiceName'), parameters('emailDomainName'))]"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Communication/emailServices/domains', parameters('emailServiceName'), parameters('emailDomainName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('functionPlanName')]",
+      "location": "[parameters('location')]",
+      "kind": "linux",
+      "sku": {
+        "name": "[parameters('appServiceSkuName')]",
+        "tier": "Basic",
+        "size": "[parameters('appServiceSkuName')]",
+        "capacity": 1
+      },
+      "tags": "[variables('tags')]",
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('functionAppName')]",
+      "location": "[parameters('location')]",
+      "kind": "functionapp,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "tags": "[variables('tags')]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('functionPlanName'))]",
+        "httpsOnly": true,
+        "clientAffinityEnabled": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('functionPlanName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('functionAppName'), 'web')]",
+      "properties": {
+        "linuxFxVersion": "Python|3.11",
+        "alwaysOn": true,
+        "ftpsState": "Disabled",
+        "minTlsVersion": "1.2"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('functionAppName'), 'appsettings')]",
+      "properties": {
+        "FUNCTIONS_EXTENSION_VERSION": "~4",
+        "FUNCTIONS_WORKER_RUNTIME": "python",
+        "AzureWebJobsStorage__accountName": "[parameters('storageAccountName')]",
+        "QuoteStorage__blobServiceUri": "[variables('blobServiceUri')]",
+        "QuoteStorage__queueServiceUri": "[variables('queueServiceUri')]",
+        "CU_ENDPOINT": "[variables('aiEndpoint')]",
+        "PG_HOST": "[variables('postgresFqdn')]",
+        "PG_DATABASE": "[parameters('postgresDatabaseName')]",
+        "PG_USER": "[parameters('dbAdminLogin')]",
+        "PG_PASSWORD": "[parameters('dbAdminPassword')]",
+        "ENABLE_ORYX_BUILD": "true",
+        "SCM_DO_BUILD_DURING_DEPLOYMENT": "1",
+        "ACS_SENDER": "[parameters('communicationSender')]",
+        "NOTIFICATION_EMAIL": "[parameters('notificationEmail')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppName'), 'blob-data-reader')]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageBlobReaderRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppName'), 'blob-data-contributor')]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageBlobContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppName'), 'queue-data-contributor')]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageQueueContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppName'), 'storage-account-contributor')]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageAccountContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppName'), 'blob-data-owner')]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageBlobOwnerRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('aiAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName')), parameters('functionAppName'), 'cognitive-services-user')]",
+      "properties": {
+        "roleDefinitionId": "[variables('cognitiveServicesUserRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName'))]",
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableBackendWebApp')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('backendPlanName')]",
+      "location": "[parameters('location')]",
+      "kind": "linux",
+      "sku": {
+        "name": "[parameters('appServiceSkuName')]",
+        "tier": "Basic",
+        "size": "[parameters('appServiceSkuName')]",
+        "capacity": 1
+      },
+      "tags": "[variables('tags')]",
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "condition": "[parameters('enableBackendWebApp')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('backendWebAppName')]",
+      "location": "[parameters('location')]",
+      "kind": "app,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "tags": "[variables('tags')]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('backendPlanName'))]",
+        "httpsOnly": true,
+        "clientAffinityEnabled": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('backendPlanName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableBackendWebApp')]",
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('backendWebAppName'), 'web')]",
+      "properties": {
+        "linuxFxVersion": "PYTHON|3.12",
+        "alwaysOn": true,
+        "ftpsState": "Disabled",
+        "minTlsVersion": "1.2",
+        "appCommandLine": "gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind=0.0.0.0:$PORT"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('backendWebAppName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableBackendWebApp')]",
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('backendWebAppName'), 'appsettings')]",
+      "properties": {
+        "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+        "WEBSITE_RUN_FROM_PACKAGE": "0",
+        "APP_ENV": "[parameters('environmentName')]",
+        "CORS_ORIGINS": "http://localhost:5173,http://localhost:3000",
+        "DATABASE_URL": "[variables('databaseUrl')]",
+        "AZURE_STORAGE_CONTAINER": "[parameters('blobContainerName')]",
+        "AZURE_OPENAI_ENDPOINT": "[variables('aiEndpoint')]",
+        "AZURE_OPENAI_DEPLOYMENT": "[parameters('openAiDeploymentName')]",
+        "AZURE_OPENAI_API_KEY": "",
+        "AZURE_OPENAI_API_VERSION": "2025-01-01-preview",
+        "AZURE_CONTENT_UNDERSTANDING_ENDPOINT": "[variables('aiEndpoint')]",
+        "AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID": "[parameters('contentUnderstandingAnalyzerId')]",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference(resourceId('Microsoft.Insights/components', format('{0}-appi', parameters('backendWebAppName'))), '2020-02-02').ConnectionString]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', format('{0}-appi', parameters('backendWebAppName')))]",
+        "[resourceId('Microsoft.Web/sites', parameters('backendWebAppName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableBackendWebApp')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('aiAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName')), parameters('backendWebAppName'), 'cognitive-services-user')]",
+      "properties": {
+        "roleDefinitionId": "[variables('cognitiveServicesUserRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('backendWebAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiAccountName'))]",
+        "[resourceId('Microsoft.Web/sites', parameters('backendWebAppName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "storageAccountResourceName": {
+      "type": "string",
+      "value": "[parameters('storageAccountName')]"
+    },
+    "quoteDocumentsContainer": {
+      "type": "string",
+      "value": "[parameters('blobContainerName')]"
+    },
+    "postgresServerFqdn": {
+      "type": "string",
+      "value": "[variables('postgresFqdn')]"
+    },
+    "postgresDatabase": {
+      "type": "string",
+      "value": "[parameters('postgresDatabaseName')]"
+    },
+    "aiServicesEndpoint": {
+      "type": "string",
+      "value": "[variables('aiEndpoint')]"
+    },
+    "aiFoundryProjectResourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('aiAccountName'), parameters('foundryProjectName'))]"
+    },
+    "aiFoundryProjectApiUrl": {
+      "type": "string",
+      "value": "[format('https://{0}.services.ai.azure.com/api/projects/{1}', parameters('aiAccountName'), parameters('foundryProjectName'))]"
+    },
+    "contentUnderstandingAnalyzerName": {
+      "type": "string",
+      "value": "[parameters('contentUnderstandingAnalyzerId')]"
+    },
+    "communicationServiceNameOut": {
+      "type": "string",
+      "value": "[parameters('communicationServiceName')]"
+    },
+    "emailServiceNameOut": {
+      "type": "string",
+      "value": "[parameters('emailServiceName')]"
+    },
+    "emailSenderDomain": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Communication/emailServices/domains', parameters('emailServiceName'), parameters('emailDomainName')), '2023-06-01-preview').fromSenderDomain]"
+    },
+    "functionAppUrl": {
+      "type": "string",
+      "value": "[format('https://{0}.azurewebsites.net', parameters('functionAppName'))]"
+    },
+    "backendWebAppUrl": {
+      "type": "string",
+      "value": "[if(parameters('enableBackendWebApp'), format('https://{0}.azurewebsites.net', parameters('backendWebAppName')), '')]"
+    },
+    "storageBlobServiceUrl": {
+      "type": "string",
+      "value": "[variables('blobServiceUri')]"
+    },
+    "storageQueueServiceUrl": {
+      "type": "string",
+      "value": "[variables('queueServiceUri')]"
+    }
+  }
+}
