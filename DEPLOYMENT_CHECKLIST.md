@@ -2,6 +2,8 @@
 
 Use this checklist for a quick and repeatable deployment.
 
+For the final live-demo sign-off, see [`DEMO_READINESS_CHECKLIST.md`](./DEMO_READINESS_CHECKLIST.md).
+
 ---
 
 ## 1) Prerequisites

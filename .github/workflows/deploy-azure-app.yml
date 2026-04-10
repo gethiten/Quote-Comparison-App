@@ -33,9 +33,9 @@ permissions:
   contents: read
 
 env:
-  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID || 'a47a60c9-6c3a-4d3c-bfa2-3bf19a2bd909' }}
-  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID || '892b7be8-fec5-4262-9e37-7289551b9efe' }}
-  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID || '8880ffa5-3871-4474-8b77-bcc8da3ae37b' }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-quote-comparison' }}
   AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'centralus' }}
   AZURE_FUNCTIONAPP_NAME: ${{ vars.AZURE_FUNCTIONAPP_NAME || 'quotecompare-func' }}

@@ -8,6 +8,8 @@ For complete local setup, Azure provisioning, deployment, verification, and trou
 
 For a quick go-live list, see [`DEPLOYMENT_CHECKLIST.md`](./DEPLOYMENT_CHECKLIST.md).
 
+For the final live demo sign-off, see [`DEMO_READINESS_CHECKLIST.md`](./DEMO_READINESS_CHECKLIST.md).
+
 ## Architecture Diagram
 
 ```mermaid

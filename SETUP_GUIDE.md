@@ -6,6 +6,8 @@ This guide walks through the **full setup**, **local development**, and **Azure 
 
 For a shorter version, see [`DEPLOYMENT_CHECKLIST.md`](./DEPLOYMENT_CHECKLIST.md).
 
+For the final demo-day sign-off list, see [`DEMO_READINESS_CHECKLIST.md`](./DEMO_READINESS_CHECKLIST.md).
+
 ---
 
 ## 1) What this app includes
