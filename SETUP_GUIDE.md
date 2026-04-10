@@ -460,7 +460,7 @@ This repo can now be deployed using GitHub Actions workflows under `.github/work
 ### Workflows included
 
 - `ci.yml` — validates Python and frontend builds
-- `deploy-azure-app.yml` — deploys the Function App, backend Web App, and frontend static site
+- `deploy-azure-app.yml` — deploys the Function App, builds and pushes the backend container to ACR, updates the backend Web App, and publishes the frontend static site
 - `deploy-azure-infra.yml` — manually deploys Azure infrastructure from Bicep
 
 ### Required GitHub repository secrets
@@ -482,6 +482,8 @@ Add these in **GitHub → Settings → Secrets and variables → Actions**:
 | `AZURE_LOCATION` | `centralus` |
 | `AZURE_FUNCTIONAPP_NAME` | `quotecompare-func` |
 | `AZURE_WEBAPP_NAME` | `quotecompare-api` |
+| `AZURE_CONTAINER_REGISTRY` | `quotecompareacr2026` |
+| `AZURE_BACKEND_IMAGE_NAME` | `quotecompare-api` |
 | `AZURE_STORAGE_ACCOUNT` | `quotecomparestr2026` |
 | `FRONTEND_API_BASE_URL` | `https://quotecompare-api.azurewebsites.net/api` |
 | `NOTIFICATION_EMAIL` | `you@example.com` |
@@ -500,6 +502,7 @@ The GitHub deployment identity should have:
 1. Push to `main` to trigger CI and app deployment.
 2. Use **Actions → Deploy Azure Infrastructure** when you need to provision or update Azure resources.
 3. Use **Actions → Deploy App to Azure** to redeploy the app components manually.
+4. The backend portion of the app workflow now uses the `ACR -> App Service for Containers` path instead of zip deployment.
 
 ---
 
