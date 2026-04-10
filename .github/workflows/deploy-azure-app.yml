@@ -108,10 +108,10 @@ jobs:
     needs: build_frontend
     if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.deploy_backend == 'true' }}
     env:
-      AZURE_RG: ${{ env.AZURE_RESOURCE_GROUP }}
-      AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
-      ACR_NAME: ${{ env.AZURE_CONTAINER_REGISTRY }}
-      IMAGE_NAME: ${{ env.AZURE_BACKEND_IMAGE_NAME }}
+      AZURE_RG: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-quote-comparison' }}
+      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'quotecompare-api' }}
+      ACR_NAME: ${{ vars.AZURE_CONTAINER_REGISTRY || 'quotecompareacr2026' }}
+      IMAGE_NAME: ${{ vars.AZURE_BACKEND_IMAGE_NAME || 'quotecompare-api' }}
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
