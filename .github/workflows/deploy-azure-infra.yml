@@ -1,0 +1,58 @@
+name: Deploy Azure Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      enable_backend_webapp:
+        description: Create or update the FastAPI backend App Service
+        required: true
+        type: boolean
+        default: true
+      allowed_client_ip:
+        description: Optional public IP to allow in PostgreSQL firewall
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy_infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Bicep infrastructure
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az group create \
+              --name "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --location "${{ vars.AZURE_LOCATION || 'centralus' }}"
+
+            az deployment group create \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --template-file infra/main.bicep \
+              --parameters @infra/main.parameters.json \
+              --parameters dbAdminPassword='${{ secrets.DB_ADMIN_PASSWORD }}' \
+                           notificationEmail='${{ vars.NOTIFICATION_EMAIL }}' \
+                           communicationSender='${{ vars.COMMUNICATION_SENDER }}' \
+                           enableBackendWebApp=${{ github.event.inputs.enable_backend_webapp }} \
+                           allowedClientIp='${{ github.event.inputs.allowed_client_ip }}'
+
+            echo "### Infrastructure deployment complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Resource group: ${{ vars.AZURE_RESOURCE_GROUP }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Function App: ${{ vars.AZURE_FUNCTIONAPP_NAME }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Backend Web App: ${{ vars.AZURE_WEBAPP_NAME }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Storage account: ${{ vars.AZURE_STORAGE_ACCOUNT }}" >> "$GITHUB_STEP_SUMMARY"

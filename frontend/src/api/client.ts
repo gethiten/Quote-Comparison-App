@@ -4,7 +4,8 @@
  */
 import type { Comparison, CarrierQuote } from '../types'
 
-const BASE = '/api'
+const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim()
+const BASE = configuredBase ? configuredBase.replace(/\/$/, '') : '/api'
 const REQUEST_TIMEOUT_MS = 8000
 
 async function request<T>(url: string, opts?: RequestInit): Promise<T> {

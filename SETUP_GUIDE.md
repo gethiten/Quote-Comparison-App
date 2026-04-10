@@ -453,7 +453,57 @@ The built files will be created in `frontend/dist/`.
 
 ---
 
-## 14) End-to-end verification checklist
+## 14) GitHub Actions CI/CD deployment
+
+This repo can now be deployed using GitHub Actions workflows under `.github/workflows/`.
+
+### Workflows included
+
+- `ci.yml` — validates Python and frontend builds
+- `deploy-azure-app.yml` — deploys the Function App, backend Web App, and frontend static site
+- `deploy-azure-infra.yml` — manually deploys Azure infrastructure from Bicep
+
+### Required GitHub repository secrets
+
+Add these in **GitHub → Settings → Secrets and variables → Actions**:
+
+| Secret | Purpose |
+|---|---|
+| `AZURE_CLIENT_ID` | Azure federated identity app/client ID |
+| `AZURE_TENANT_ID` | Azure tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID |
+| `DB_ADMIN_PASSWORD` | PostgreSQL admin password for infra deployment |
+
+### Required GitHub repository variables
+
+| Variable | Example value |
+|---|---|
+| `AZURE_RESOURCE_GROUP` | `rg-quote-comparison` |
+| `AZURE_LOCATION` | `centralus` |
+| `AZURE_FUNCTIONAPP_NAME` | `quotecompare-func` |
+| `AZURE_WEBAPP_NAME` | `quotecompare-api` |
+| `AZURE_STORAGE_ACCOUNT` | `quotecomparestr2026` |
+| `FRONTEND_API_BASE_URL` | `https://quotecompare-api.azurewebsites.net/api` |
+| `NOTIFICATION_EMAIL` | `you@example.com` |
+| `COMMUNICATION_SENDER` | `DoNotReply@your-domain.com` |
+
+### Azure RBAC for GitHub Actions
+
+The GitHub deployment identity should have:
+
+- `Contributor` on the resource group for app deployments
+- `User Access Administrator` (or `Owner`) if it will run the Bicep infra workflow that creates role assignments
+- `Storage Blob Data Contributor` on the storage account if the frontend is deployed to Azure Storage static website
+
+### Run the pipelines
+
+1. Push to `main` to trigger CI and app deployment.
+2. Use **Actions → Deploy Azure Infrastructure** when you need to provision or update Azure resources.
+3. Use **Actions → Deploy App to Azure** to redeploy the app components manually.
+
+---
+
+## 15) End-to-end verification checklist
 
 After setup, verify the following in order:
 
@@ -476,7 +526,7 @@ After setup, verify the following in order:
 
 ---
 
-## 15) Common issues and fixes
+## 16) Common issues and fixes
 
 ### Issue: backend starts but cannot connect to PostgreSQL
 
@@ -532,7 +582,7 @@ pip install -r requirements.txt
 
 ---
 
-## 16) Demo-friendly cost guidance
+## 17) Demo-friendly cost guidance
 
 If this app is only for demos:
 
@@ -543,7 +593,7 @@ If this app is only for demos:
 
 ---
 
-## 17) Recommended setup order for a brand-new environment
+## 18) Recommended setup order for a brand-new environment
 
 If someone is setting this up for the first time, follow this exact order:
 
@@ -560,7 +610,7 @@ If someone is setting this up for the first time, follow this exact order:
 
 ---
 
-## 18) Files to know
+## 19) Files to know
 
 | File | Purpose |
 |---|---|
@@ -575,7 +625,7 @@ If someone is setting this up for the first time, follow this exact order:
 
 ---
 
-## 19) Final recommendation
+## 20) Final recommendation
 
 For the smoothest demo setup:
 

@@ -534,6 +534,7 @@ resource backendAppSettings 'Microsoft.Web/sites/config@2023-12-01' = if (enable
   parent: backendWebApp
   properties: {
     SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
+    ENABLE_ORYX_BUILD: 'true'
     WEBSITE_RUN_FROM_PACKAGE: '0'
     APP_ENV: environmentName
     CORS_ORIGINS: 'http://localhost:5173,http://localhost:3000'
