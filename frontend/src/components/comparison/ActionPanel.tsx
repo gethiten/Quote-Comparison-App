@@ -57,8 +57,9 @@ export default function ActionPanel({ comparison, onUpdate }: ActionPanelProps) 
     try {
       const result = await fetchAiAnalysis(comparison.id)
       setAiAnalysis(result.analysis)
-    } catch {
-      setAiAnalysis('AI analysis unavailable. Please configure Azure OpenAI credentials in the backend.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'AI analysis is temporarily unavailable.'
+      setAiAnalysis(message)
     } finally {
       setAiLoading(false)
     }

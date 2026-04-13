@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models.models import Comparison, ComparisonQuote, Quote
-from app.schemas.schemas import ComparisonCreate, ComparisonOut, ComparisonUpdate, ScoredQuote
+from app.schemas.schemas import ComparisonCreate, ComparisonOut, ComparisonUpdate, QuoteOut, ScoredQuote
 from app.services.scoring_service import rank_quotes
 
 router = APIRouter(prefix="/comparisons", tags=["comparisons"])
@@ -28,7 +28,7 @@ def list_comparisons(account_id: uuid.UUID | None = None, db: Session = Depends(
             .all()
         )
         out = ComparisonOut.model_validate(comp)
-        out.quotes = [cq_item.quote for cq_item in cq]
+        out.quotes = [QuoteOut.model_validate(cq_item.quote) for cq_item in cq]
         result.append(out)
     return result
 
@@ -46,7 +46,7 @@ def get_comparison(comparison_id: uuid.UUID, db: Session = Depends(get_db)):
         .all()
     )
     out = ComparisonOut.model_validate(comp)
-    out.quotes = [cq_item.quote for cq_item in cq]
+    out.quotes = [QuoteOut.model_validate(cq_item.quote) for cq_item in cq]
     return out
 
 

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "11874682402457848832"
+      "templateHash": "8325011767430302109"
     }
   },
   "parameters": {
@@ -619,10 +619,12 @@
         "PG_PASSWORD": "[parameters('dbAdminPassword')]",
         "ENABLE_ORYX_BUILD": "true",
         "SCM_DO_BUILD_DURING_DEPLOYMENT": "1",
+        "ACS_CONNECTION_STRING": "[listKeys(resourceId('Microsoft.Communication/communicationServices', parameters('communicationServiceName')), '2023-04-01').primaryConnectionString]",
         "ACS_SENDER": "[parameters('communicationSender')]",
         "NOTIFICATION_EMAIL": "[parameters('notificationEmail')]"
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Communication/communicationServices', parameters('communicationServiceName'))]",
         "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ]
@@ -778,6 +780,7 @@
       "name": "[format('{0}/{1}', parameters('backendWebAppName'), 'appsettings')]",
       "properties": {
         "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+        "ENABLE_ORYX_BUILD": "true",
         "WEBSITE_RUN_FROM_PACKAGE": "0",
         "APP_ENV": "[parameters('environmentName')]",
         "CORS_ORIGINS": "http://localhost:5173,http://localhost:3000",

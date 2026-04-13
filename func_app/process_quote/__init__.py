@@ -775,8 +775,20 @@ def _ensure_comparison(cur, account_id):
 
 def send_notification(quote_data: dict, filename: str):
     """Send email notification after a quote is successfully processed."""
-    if not ACS_CONNECTION_STRING or not NOTIFICATION_EMAIL or not ACS_SENDER:
-        logger.info("Email notification skipped — ACS not configured")
+    missing_settings = [
+        name
+        for name, value in {
+            "ACS_CONNECTION_STRING": ACS_CONNECTION_STRING,
+            "NOTIFICATION_EMAIL": NOTIFICATION_EMAIL,
+            "ACS_SENDER": ACS_SENDER,
+        }.items()
+        if not value
+    ]
+    if missing_settings:
+        logger.warning(
+            "Email notification skipped — missing app settings: %s",
+            ", ".join(missing_settings),
+        )
         return
 
     try:

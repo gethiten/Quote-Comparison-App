@@ -40,6 +40,7 @@ local-uploads/
 backend/local-uploads/
 func_app/func_logs/
 func_app/func_logs.zip
+start_morning.ps1
 *.log
 *.tmp
 *.cache

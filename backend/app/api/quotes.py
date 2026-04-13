@@ -13,6 +13,41 @@ from app.services.document_parser import parse_quote_document
 router = APIRouter(prefix="/quotes", tags=["quotes"])
 
 
+def _normalize_valuation_basis(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip().lower()
+    if not normalized:
+        return None
+    if "replacement" in normalized or normalized == "rc":
+        return "RC"
+    if "actual cash" in normalized or normalized == "acv":
+        return "ACV"
+    return value
+
+
+def _normalize_coverage_form(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip().lower()
+    if not normalized:
+        return None
+    if "special" in normalized:
+        return "Special"
+    if "broad" in normalized:
+        return "Broad"
+    if "basic" in normalized:
+        return "Basic"
+    return value
+
+
+def _normalize_quote_payload(payload: dict) -> dict:
+    normalized = dict(payload)
+    normalized["valuation_basis"] = _normalize_valuation_basis(normalized.get("valuation_basis"))
+    normalized["coverage_form"] = _normalize_coverage_form(normalized.get("coverage_form"))
+    return normalized
+
+
 @router.get("", response_model=list[QuoteOut])
 def list_quotes(property_id: uuid.UUID | None = None, db: Session = Depends(get_db)):
     q = db.query(Quote).options(joinedload(Quote.carrier))
@@ -35,7 +70,7 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
     if not property_obj:
         raise HTTPException(status_code=404, detail="Property not found")
 
-    quote_payload = payload.model_dump(exclude={"carrier_name"})
+    quote_payload = _normalize_quote_payload(payload.model_dump(exclude={"carrier_name"}))
     quote = Quote(**quote_payload)
     db.add(quote)
     db.flush()
@@ -84,7 +119,7 @@ def update_quote(quote_id: uuid.UUID, payload: QuoteCreate, db: Session = Depend
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
-    for k, v in payload.model_dump(exclude={"carrier_name"}).items():
+    for k, v in _normalize_quote_payload(payload.model_dump(exclude={"carrier_name"})).items():
         setattr(quote, k, v)
     db.commit()
     return (

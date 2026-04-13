@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 # ---------- Carrier ----------
@@ -56,9 +56,9 @@ class PropertyOut(PropertyBase):
 class QuoteBase(BaseModel):
     carrier_name: str | None = None
     quote_number: str | None = None
-    quote_date: str | None = None
-    effective_date: str | None = None
-    expiry_date: str | None = None
+    quote_date: date | None = None
+    effective_date: date | None = None
+    expiry_date: date | None = None
     building_limit: float | None = None
     valuation_basis: str | None = None
     coverage_form: str | None = None
@@ -78,6 +78,36 @@ class QuoteBase(BaseModel):
     underwriting_notes: str | None = None
     raw_file_url: str | None = None
     source_filename: str | None = None
+
+    @field_validator("valuation_basis", mode="before")
+    @classmethod
+    def normalize_valuation_basis(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip().lower()
+        if not normalized:
+            return None
+        if "replacement" in normalized or normalized == "rc":
+            return "RC"
+        if "actual cash" in normalized or normalized == "acv":
+            return "ACV"
+        return str(value).strip()
+
+    @field_validator("coverage_form", mode="before")
+    @classmethod
+    def normalize_coverage_form(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip().lower()
+        if not normalized:
+            return None
+        if "special" in normalized:
+            return "Special"
+        if "broad" in normalized:
+            return "Broad"
+        if "basic" in normalized:
+            return "Basic"
+        return str(value).strip()
 
 
 class QuoteCreate(QuoteBase):

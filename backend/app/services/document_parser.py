@@ -193,8 +193,8 @@ def _map_cu_fields_to_quote(extracted: dict, filename: str) -> dict:
         "effective_date": extracted.get("EffectiveDate"),
         "expiry_date": extracted.get("ExpiryDate"),
         "building_limit": _to_float(extracted.get("BuildingLimit")),
-        "valuation_basis": extracted.get("ValuationBasis"),
-        "coverage_form": extracted.get("CoverageForm"),
+        "valuation_basis": _normalize_valuation_basis(extracted.get("ValuationBasis")),
+        "coverage_form": _normalize_coverage_form(extracted.get("CoverageForm")),
         "coinsurance": int(_to_float(extracted.get("Coinsurance"))) if _to_float(extracted.get("Coinsurance")) is not None else None,
         "bpp_limit": _to_float(extracted.get("BPPLimit")),
         "business_interruption_limit": _to_float(extracted.get("BusinessInterruptionLimit")),
@@ -236,6 +236,34 @@ def _to_bool(val: object) -> bool | None:
         return True
     if normalized in {"no", "false", "excluded", "excl", "n"}:
         return False
+    return None
+
+
+def _normalize_valuation_basis(val: object) -> str | None:
+    if val is None:
+        return None
+    normalized = str(val).strip().lower()
+    if not normalized:
+        return None
+    if "replacement" in normalized or normalized == "rc":
+        return "RC"
+    if "actual cash" in normalized or normalized == "acv":
+        return "ACV"
+    return None
+
+
+def _normalize_coverage_form(val: object) -> str | None:
+    if val is None:
+        return None
+    normalized = str(val).strip().lower()
+    if not normalized:
+        return None
+    if "special" in normalized:
+        return "Special"
+    if "broad" in normalized:
+        return "Broad"
+    if "basic" in normalized:
+        return "Basic"
     return None
 
 

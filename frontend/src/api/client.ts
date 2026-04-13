@@ -4,13 +4,19 @@
  */
 import type { Comparison, CarrierQuote } from '../types'
 
+type RequestOptions = RequestInit & {
+  timeoutMs?: number
+}
+
 const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim()
 const BASE = configuredBase ? configuredBase.replace(/\/$/, '') : '/api'
 const REQUEST_TIMEOUT_MS = 8000
+const AI_REQUEST_TIMEOUT_MS = 60000
 
-async function request<T>(url: string, opts?: RequestInit): Promise<T> {
+async function request<T>(url: string, opts?: RequestOptions): Promise<T> {
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  const timeoutMs = opts?.timeoutMs ?? REQUEST_TIMEOUT_MS
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const res = await fetch(`${BASE}${url}`, {
@@ -26,7 +32,7 @@ async function request<T>(url: string, opts?: RequestInit): Promise<T> {
     return res.json()
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`)
+      throw new Error(`Request timed out after ${timeoutMs / 1000}s`)
     }
     throw error
   } finally {
@@ -280,5 +286,5 @@ export async function fetchCarriers(): Promise<ApiCarrier[]> {
 }
 
 export async function fetchAiAnalysis(comparisonId: string): Promise<{ analysis: string }> {
-  return request(`/ai/analyze/${comparisonId}`)
+  return request(`/ai/analyze/${comparisonId}`, { timeoutMs: AI_REQUEST_TIMEOUT_MS })
 }

@@ -120,6 +120,7 @@ var databaseUrl = 'postgresql://${dbAdminLogin}:${dbAdminPassword}@${postgresFqd
 var storageDnsSuffix = environment().suffixes.storage
 var blobServiceUri = 'https://${storageAccountName}.blob.${storageDnsSuffix}'
 var queueServiceUri = 'https://${storageAccountName}.queue.${storageDnsSuffix}'
+var communicationConnectionString = communicationService.listKeys().primaryConnectionString
 var storageBlobReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1')
 var storageBlobContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
 var storageQueueContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
@@ -421,6 +422,7 @@ resource functionAppSettings 'Microsoft.Web/sites/config@2023-12-01' = {
     PG_PASSWORD: dbAdminPassword
     ENABLE_ORYX_BUILD: 'true'
     SCM_DO_BUILD_DURING_DEPLOYMENT: '1'
+    ACS_CONNECTION_STRING: communicationConnectionString
     ACS_SENDER: communicationSender
     NOTIFICATION_EMAIL: notificationEmail
   }
