@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import date, datetime
 
@@ -13,6 +14,16 @@ class CarrierBase(BaseModel):
     am_best_rating: str | None = None
     admitted_status: str | None = None
     is_active: bool = True
+
+    @field_validator("carrier_name", mode="before")
+    @classmethod
+    def normalize_carrier_name(cls, value: object) -> str:
+        if value is None:
+            raise ValueError("carrier_name is required")
+        normalized = " ".join(str(value).strip().split())
+        if not normalized:
+            raise ValueError("carrier_name is required")
+        return normalized
 
 
 class CarrierCreate(CarrierBase):
@@ -78,6 +89,22 @@ class QuoteBase(BaseModel):
     underwriting_notes: str | None = None
     raw_file_url: str | None = None
     source_filename: str | None = None
+
+    @field_validator("carrier_name", mode="before")
+    @classmethod
+    def normalize_quote_carrier_name(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        normalized = " ".join(str(value).strip().split())
+        return normalized or None
+
+    @field_validator("quote_number", mode="before")
+    @classmethod
+    def normalize_quote_number(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        normalized = re.sub(r"\s+", " ", str(value).strip())
+        return normalized or None
 
     @field_validator("valuation_basis", mode="before")
     @classmethod

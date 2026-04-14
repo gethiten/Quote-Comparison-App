@@ -13,26 +13,61 @@ const BASE = configuredBase ? configuredBase.replace(/\/$/, '') : '/api'
 const REQUEST_TIMEOUT_MS = 8000
 const AI_REQUEST_TIMEOUT_MS = 60000
 
+async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const contentType = res.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      const data = await res.json()
+      if (typeof data?.detail === 'string' && data.detail.trim()) {
+        return data.detail
+      }
+    }
+
+    const text = await res.text()
+    if (text.trim()) {
+      return text
+    }
+  } catch {
+    // ignore parse errors and fall back below
+  }
+
+  return fallback
+}
+
 async function request<T>(url: string, opts?: RequestOptions): Promise<T> {
   const controller = new AbortController()
   const timeoutMs = opts?.timeoutMs ?? REQUEST_TIMEOUT_MS
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
 
+  const headers = new Headers(opts?.headers)
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json')
+  }
+
+  const hasBody = opts?.body !== undefined && opts?.body !== null
+  const isFormData = typeof FormData !== 'undefined' && opts?.body instanceof FormData
+  if (hasBody && !isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+
   try {
     const res = await fetch(`${BASE}${url}`, {
-      headers: { 'Content-Type': 'application/json', ...opts?.headers },
       ...opts,
+      headers,
       signal: opts?.signal ?? controller.signal,
     })
     if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      throw new Error(`API ${res.status}: ${body}`)
+      const message = await readErrorMessage(res, `API ${res.status}`)
+      throw new Error(message)
     }
     if (res.status === 204) return undefined as T
     return res.json()
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw new Error(`Request timed out after ${timeoutMs / 1000}s`)
+    }
+    if (error instanceof TypeError) {
+      throw new Error('Network request failed. Please refresh and try again.')
     }
     throw error
   } finally {
@@ -237,8 +272,8 @@ export async function uploadQuoteFile(file: File): Promise<{
   formData.append('file', file)
   const res = await fetch(`${BASE}/quotes/upload`, { method: 'POST', body: formData })
   if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(body || `Upload failed: ${res.status}`)
+    const message = await readErrorMessage(res, `Upload failed: ${res.status}`)
+    throw new Error(message)
   }
   return res.json()
 }

@@ -2,6 +2,8 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func as sa_func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -26,8 +28,33 @@ def get_carrier(carrier_id: uuid.UUID, db: Session = Depends(get_db)):
 
 @router.post("", response_model=CarrierOut, status_code=201)
 def create_carrier(payload: CarrierCreate, db: Session = Depends(get_db)):
-    carrier = Carrier(**payload.model_dump())
+    normalized_name = " ".join(payload.carrier_name.split())
+    existing = (
+        db.query(Carrier)
+        .filter(sa_func.lower(sa_func.trim(Carrier.carrier_name)) == normalized_name.lower())
+        .first()
+    )
+    if existing:
+        return existing
+
+    carrier_data = payload.model_dump()
+    carrier_data["carrier_name"] = normalized_name
+
+    carrier = Carrier(**carrier_data)
     db.add(carrier)
-    db.commit()
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing = (
+            db.query(Carrier)
+            .filter(sa_func.lower(sa_func.trim(Carrier.carrier_name)) == normalized_name.lower())
+            .first()
+        )
+        if existing:
+            return existing
+        raise HTTPException(status_code=409, detail="A carrier with this name already exists")
+
     db.refresh(carrier)
     return carrier

@@ -8,20 +8,27 @@ import QuoteIngestionForm from '../components/comparison/QuoteIngestionForm'
 
 interface ComparisonViewProps {
   comparisons: Comparison[]
+  selectedCarriers?: Record<string, boolean>
   onUpdateComparison?: (comparison: Comparison) => void
   onRefresh?: () => void
   showQuoteForm?: boolean
   onShowQuoteFormChange?: (show: boolean) => void
 }
 
-export default function ComparisonView({ comparisons, onUpdateComparison, onRefresh, showQuoteForm: externalShowForm, onShowQuoteFormChange }: ComparisonViewProps) {
+export default function ComparisonView({ comparisons, selectedCarriers = {}, onUpdateComparison, onRefresh, showQuoteForm: externalShowForm, onShowQuoteFormChange }: ComparisonViewProps) {
   const [activeTab, setActiveTab] = useState(0)
 
   const showQuoteForm = externalShowForm ?? false
   const setShowQuoteForm = onShowQuoteFormChange ?? (() => {})
 
-  const comparison = comparisons[activeTab]
-  if (!comparison) {
+  const sourceComparison = comparisons[activeTab]
+  const filteredComparisons = comparisons.map((comp) => ({
+    ...comp,
+    quotes: comp.quotes.filter((quote) => selectedCarriers[quote.carrierName] ?? true),
+  }))
+
+  const comparison = filteredComparisons[activeTab]
+  if (!sourceComparison || !comparison) {
     return (
       <>
         <div className="flex h-full items-center justify-center p-8">
@@ -56,20 +63,29 @@ export default function ComparisonView({ comparisons, onUpdateComparison, onRefr
 
   const handleAddQuote = (quote: CarrierQuote) => {
     const updated: Comparison = {
-      ...comparison,
-      quotes: [...comparison.quotes, quote],
+      ...sourceComparison,
+      quotes: [...sourceComparison.quotes, quote],
     }
     onUpdateComparison?.(updated)
     setShowQuoteForm(false)
-    // Refresh from backend to get latest data
     onRefresh?.()
+  }
+
+  const handleComparisonUpdate = (updated: Comparison) => {
+    onUpdateComparison?.({
+      ...sourceComparison,
+      notes: updated.notes,
+      recommendedQuoteId: updated.recommendedQuoteId,
+      scoreWeights: updated.scoreWeights,
+      status: updated.status,
+    })
   }
 
   return (
     <div className="flex flex-col h-full">
       <AccountHeader comparison={comparison} />
       <PropertyTabs
-        comparisons={comparisons}
+        comparisons={filteredComparisons}
         activeIndex={activeTab}
         onChangeTab={setActiveTab}
         onAddQuote={() => setShowQuoteForm(true)}
@@ -78,7 +94,7 @@ export default function ComparisonView({ comparisons, onUpdateComparison, onRefr
         <div className="flex-1 overflow-y-auto">
           <ComparisonGrid comparison={comparison} />
         </div>
-        <ActionPanel comparison={comparison} onUpdate={onUpdateComparison ?? (() => {})} />
+        <ActionPanel comparison={comparison} onUpdate={handleComparisonUpdate} />
       </div>
       {showQuoteForm && (
         <QuoteIngestionForm

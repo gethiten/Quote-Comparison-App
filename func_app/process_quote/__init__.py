@@ -75,6 +75,13 @@ def main(blob: func.InputStream):
     if not insert_result:
         logger.warning("Quote was extracted from %s but no database row was inserted", filename)
         return
+    if insert_result.get("skipped"):
+        logger.warning(
+            "Skipped duplicate quote from %s (existing quote_id=%s)",
+            filename,
+            insert_result.get("quote_id"),
+        )
+        return
 
     logger.info(
         "Successfully processed and inserted quote from %s (quote_id=%s)",
@@ -566,6 +573,47 @@ def map_fields(extracted: dict, filename: str) -> dict:
     }
 
 
+def _normalize_carrier_name(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = " ".join(str(value).strip().split())
+    return normalized or None
+
+
+def _normalize_quote_number(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = re.sub(r"\s+", " ", str(value).strip())
+    return normalized or None
+
+
+def _canonical_quote_number(value: str | None) -> str | None:
+    normalized = _normalize_quote_number(value)
+    if not normalized:
+        return None
+    canonical = re.sub(r"[^A-Za-z0-9]+", "", normalized).upper()
+    return canonical or None
+
+
+def _find_duplicate_quote_id(cur, carrier_id, quote_number: str | None):
+    canonical_quote_number = _canonical_quote_number(quote_number)
+    if not carrier_id or not canonical_quote_number:
+        return None
+
+    cur.execute(
+        """
+        SELECT quote_id
+        FROM quotes
+        WHERE carrier_id = %s
+          AND UPPER(REGEXP_REPLACE(COALESCE(quote_number, ''), '[^A-Za-z0-9]+', '', 'g')) = %s
+        LIMIT 1
+        """,
+        (carrier_id, canonical_quote_number),
+    )
+    row = cur.fetchone()
+    return row[0] if row else None
+
+
 def insert_quote(quote_data: dict, filename: str):
     """Insert extracted quote data into Azure PostgreSQL."""
     conn = psycopg2.connect(
@@ -578,8 +626,30 @@ def insert_quote(quote_data: dict, filename: str):
     try:
         cur = conn.cursor()
 
+        quote_data["carrier_name"] = _normalize_carrier_name(quote_data.get("carrier_name"))
+        quote_data["quote_number"] = _normalize_quote_number(quote_data.get("quote_number"))
+
         # Resolve or create carrier
         carrier_id = _resolve_carrier(cur, quote_data.get("carrier_name"))
+
+        duplicate_quote_id = _find_duplicate_quote_id(
+            cur,
+            carrier_id,
+            quote_data.get("quote_number"),
+        )
+        if duplicate_quote_id:
+            logger.warning(
+                "Duplicate quote detected for %s: carrier=%s, quote_number=%s, existing_quote_id=%s",
+                filename,
+                quote_data.get("carrier_name"),
+                _normalize_quote_number(quote_data.get("quote_number")),
+                duplicate_quote_id,
+            )
+            return {
+                "quote_id": str(duplicate_quote_id),
+                "skipped": True,
+                "reason": "duplicate_quote",
+            }
 
         # Resolve or create a property/account so uploads work even in an empty database.
         property_id, account_id = _resolve_or_create_property(cur, quote_data)
@@ -664,6 +734,7 @@ def insert_quote(quote_data: dict, filename: str):
 
 def _resolve_carrier(cur, carrier_name: str | None):
     """Find or create a carrier by name and return its ID."""
+    carrier_name = _normalize_carrier_name(carrier_name)
     if not carrier_name:
         # Create an unknown carrier placeholder
         cur.execute(
@@ -681,7 +752,7 @@ def _resolve_carrier(cur, carrier_name: str | None):
         return cur.fetchone()[0]
 
     cur.execute(
-        "SELECT carrier_id FROM carriers WHERE LOWER(carrier_name) = LOWER(%s)",
+        "SELECT carrier_id FROM carriers WHERE LOWER(BTRIM(carrier_name)) = LOWER(%s)",
         (carrier_name,),
     )
     row = cur.fetchone()

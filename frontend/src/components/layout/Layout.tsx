@@ -17,6 +17,7 @@ export default function Layout({ page, onNavigate }: LayoutProps) {
   const [comparisons, setComparisons] = useState<Comparison[]>([])
   const [loading, setLoading] = useState(true)
   const [showQuoteForm, setShowQuoteForm] = useState(false)
+  const [selectedCarriers, setSelectedCarriers] = useState<Record<string, boolean>>({})
 
   const loadComparisons = useCallback(() => {
     setLoading(true)
@@ -26,6 +27,23 @@ export default function Layout({ page, onNavigate }: LayoutProps) {
         setActiveProperty((prev) =>
           apiComparisons.length === 0 ? 0 : Math.min(prev, apiComparisons.length - 1)
         )
+
+        const carrierNames = Array.from(
+          new Set(
+            apiComparisons.flatMap((comparison) =>
+              comparison.quotes.map((quote) => quote.carrierName).filter(Boolean)
+            )
+          )
+        )
+
+        setSelectedCarriers((prev) => {
+          const next: Record<string, boolean> = {}
+          carrierNames.forEach((name) => {
+            next[name] = prev[name] ?? true
+          })
+          return next
+        })
+
         if (apiComparisons.length === 0) {
           setShowQuoteForm(false)
         }
@@ -51,6 +69,13 @@ export default function Layout({ page, onNavigate }: LayoutProps) {
     setShowQuoteForm(true)
   }
 
+  const handleCarrierToggle = (carrierName: string) => {
+    setSelectedCarriers((prev) => ({
+      ...prev,
+      [carrierName]: !(prev[carrierName] ?? true),
+    }))
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <TopNav page={page} onNavigate={onNavigate} onNewQuote={handleNewQuote} />
@@ -62,6 +87,8 @@ export default function Layout({ page, onNavigate }: LayoutProps) {
             onNavigate('comparison')
           }}
           comparisons={comparisons}
+          selectedCarriers={selectedCarriers}
+          onCarrierToggle={handleCarrierToggle}
         />
         <main className="flex-1 overflow-auto scrollbar-thin bg-slate-100">
           {loading ? (
@@ -71,6 +98,7 @@ export default function Layout({ page, onNavigate }: LayoutProps) {
           ) : page === 'comparison' ? (
             <ComparisonView
               comparisons={comparisons}
+              selectedCarriers={selectedCarriers}
               onUpdateComparison={handleUpdateComparison}
               onRefresh={loadComparisons}
               showQuoteForm={showQuoteForm}

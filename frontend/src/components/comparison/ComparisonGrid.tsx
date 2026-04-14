@@ -119,6 +119,19 @@ export default function ComparisonGrid({ comparison }: ComparisonGridProps) {
   const toggleGapPanel = (quoteId: string) => { setOpenGapPanels((prev) => ({ ...prev, [quoteId]: !prev[quoteId] })) }
   const allGaps = quotes.map((q) => detectGaps(q, property))
 
+  if (quotes.length === 0) {
+    return (
+      <div className="p-8">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <h3 className="text-base font-semibold text-navy-dark">No carriers selected</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Use the carrier checkboxes in the left sidebar to show the quotes you want to compare.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="overflow-x-auto scrollbar-thin">
       <table className="border-collapse min-w-full" style={{ tableLayout: 'fixed' }}>

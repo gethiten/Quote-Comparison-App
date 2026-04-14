@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     AZURE_CONTENT_UNDERSTANDING_ENDPOINT: str = ""
     AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID: str = "insuranceQuoteExtractor"
     APP_ENV: str = "development"
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,https://localhost:5173"
 
     model_config = {"env_file": str(ENV_FILE), "extra": "ignore"}
 
