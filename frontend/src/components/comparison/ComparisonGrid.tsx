@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect, useRef, useMemo } from 'react'
 import clsx from 'clsx'
 import type { Comparison, CarrierQuote, CellRating, GapFlag } from '../../types'
 import { detectGaps, getCellRating } from '../../utils/gapDetection'
@@ -6,6 +6,7 @@ import { fmtCurrency, fmtPct, fmtSF, fmtDate, ratingColor } from '../../utils/fo
 
 interface ComparisonGridProps {
   comparison: Comparison
+  focusGapsSignal?: number
 }
 
 type CellRatingStyle = { row: string; text: string }
@@ -113,11 +114,33 @@ function GapPanel({ gaps, isOpen, onToggle }: GapPanelProps) {
   )
 }
 
-export default function ComparisonGrid({ comparison }: ComparisonGridProps) {
+export default function ComparisonGrid({ comparison, focusGapsSignal = 0 }: ComparisonGridProps) {
   const { quotes, property } = comparison
   const [openGapPanels, setOpenGapPanels] = useState<Record<string, boolean>>({})
+  const [highlightGaps, setHighlightGaps] = useState(false)
+  const gapSectionRef = useRef<HTMLTableCellElement | null>(null)
   const toggleGapPanel = (quoteId: string) => { setOpenGapPanels((prev) => ({ ...prev, [quoteId]: !prev[quoteId] })) }
-  const allGaps = quotes.map((q) => detectGaps(q, property))
+  const allGaps = useMemo(() => quotes.map((q) => detectGaps(q, property)), [quotes, property])
+
+  useEffect(() => {
+    if (!focusGapsSignal) return
+
+    const nextOpenPanels: Record<string, boolean> = {}
+    quotes.forEach((q, qi) => {
+      if (allGaps[qi]?.length > 0) {
+        nextOpenPanels[q.id] = true
+      }
+    })
+
+    setOpenGapPanels((prev) => ({ ...prev, ...nextOpenPanels }))
+    window.requestAnimationFrame(() => {
+      gapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    setHighlightGaps(true)
+
+    const timeoutId = window.setTimeout(() => setHighlightGaps(false), 2200)
+    return () => window.clearTimeout(timeoutId)
+  }, [focusGapsSignal, quotes, allGaps])
 
   if (quotes.length === 0) {
     return (
@@ -205,7 +228,18 @@ export default function ComparisonGrid({ comparison }: ComparisonGridProps) {
             ))}
           </tr>
           <tr>
-            <td colSpan={quotes.length + 1} className="sticky left-0 bg-red-100 text-red-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 border-t border-b border-red-200">GAP FLAGS</td>
+            <td
+              ref={gapSectionRef}
+              colSpan={quotes.length + 1}
+              className={clsx(
+                'sticky left-0 text-xs font-bold uppercase tracking-wider px-3 py-1.5 border-t border-b transition-all duration-300',
+                highlightGaps
+                  ? 'bg-amber-100 text-amber-800 border-amber-300 ring-2 ring-amber-300 ring-inset'
+                  : 'bg-red-100 text-red-700 border-red-200'
+              )}
+            >
+              GAP FLAGS
+            </td>
           </tr>
           <tr>
             <td className="sticky left-0 z-10 bg-white border-r border-slate-200 px-3 py-2 text-xs text-slate-500 font-medium align-top">Detected Issues</td>

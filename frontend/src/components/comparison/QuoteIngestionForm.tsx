@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import type { CarrierQuote } from '../../types'
-import { uploadQuoteFile, createQuote, createCarrier, fetchCarriers } from '../../api/client'
+import { uploadQuoteFile, createQuote, createCarrier, createAccount, createProperty, fetchCarriers } from '../../api/client'
 import Button from '../ui/Button'
 
 interface QuoteIngestionFormProps {
   onSubmit: (quote: CarrierQuote) => void
   onCancel: () => void
-  propertyId: string
+  propertyId?: string
 }
 
 const EMPTY_QUOTE: Omit<CarrierQuote, 'id'> = {
@@ -36,15 +36,30 @@ const EMPTY_QUOTE: Omit<CarrierQuote, 'id'> = {
   underwritingNotes: '',
 }
 
+const EMPTY_PROPERTY_SETUP = {
+  clientName: '',
+  address: '',
+  city: '',
+  state: '',
+  zip: '',
+  propertyType: 'office',
+}
+
 export default function QuoteIngestionForm({ onSubmit, onCancel, propertyId }: QuoteIngestionFormProps) {
   const [form, setForm] = useState(EMPTY_QUOTE)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [extracting, setExtracting] = useState(false)
+  const [propertySetup, setPropertySetup] = useState(EMPTY_PROPERTY_SETUP)
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
+
+  const setPropertyField = <K extends keyof typeof propertySetup>(key: K, value: (typeof propertySetup)[K]) =>
+    setPropertySetup((prev) => ({ ...prev, [key]: value }))
+
+  const needsPropertySetup = !propertyId
 
   const handleFileUpload = async (selectedFile: File) => {
     setFile(selectedFile)
@@ -94,6 +109,31 @@ export default function QuoteIngestionForm({ onSubmit, onCancel, propertyId }: Q
     setUploading(true)
     setError(null)
     try {
+      let resolvedPropertyId = propertyId
+
+      if (!resolvedPropertyId) {
+        if (!propertySetup.clientName.trim() || !propertySetup.address.trim()) {
+          throw new Error('Please enter the client name and property address before adding the first quote.')
+        }
+
+        const account = await createAccount({
+          client_name: propertySetup.clientName.trim(),
+          address: propertySetup.address.trim(),
+        })
+
+        const property = await createProperty({
+          account_id: account.id,
+          address: propertySetup.address.trim(),
+          city: propertySetup.city.trim() || undefined,
+          state: propertySetup.state.trim() || undefined,
+          zip: propertySetup.zip.trim() || undefined,
+          type: propertySetup.propertyType,
+          insured_value: form.buildingLimit || 0,
+        })
+
+        resolvedPropertyId = property.id
+      }
+
       // Find or create carrier
       const carriers = await fetchCarriers()
       let carrier = carriers.find(
@@ -109,7 +149,7 @@ export default function QuoteIngestionForm({ onSubmit, onCancel, propertyId }: Q
 
       // Create the quote in the backend
       const apiQuote = await createQuote({
-        property_id: propertyId,
+        property_id: resolvedPropertyId,
         carrier_id: carrier.id,
         quote_number: form.quoteNumber || undefined,
         quote_date: form.quoteDate || undefined,
@@ -198,6 +238,32 @@ export default function QuoteIngestionForm({ onSubmit, onCancel, propertyId }: Q
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-xs text-red-700">{error}</div>
+          )}
+
+          {needsPropertySetup && (
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200 pb-1 w-full">Client & Property Setup</legend>
+              <p className="text-xs text-slate-500">No existing quotes were found, so this first entry will create the property context automatically.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelClass}>Client Name *</label><input required className={fieldClass} value={propertySetup.clientName} onChange={(e) => setPropertyField('clientName', e.target.value)} /></div>
+                <div>
+                  <label className={labelClass}>Property Type</label>
+                  <select className={fieldClass} value={propertySetup.propertyType} onChange={(e) => setPropertyField('propertyType', e.target.value)}>
+                    <option value="office">Office</option>
+                    <option value="retail">Retail</option>
+                    <option value="industrial">Industrial</option>
+                    <option value="mixed-use">Mixed Use</option>
+                    <option value="hospitality">Hospitality</option>
+                    <option value="multi-family">Multi Family</option>
+                    <option value="special-purpose">Special Purpose</option>
+                  </select>
+                </div>
+                <div className="col-span-2"><label className={labelClass}>Property Address *</label><input required className={fieldClass} value={propertySetup.address} onChange={(e) => setPropertyField('address', e.target.value)} /></div>
+                <div><label className={labelClass}>City</label><input className={fieldClass} value={propertySetup.city} onChange={(e) => setPropertyField('city', e.target.value)} /></div>
+                <div><label className={labelClass}>State</label><input className={fieldClass} value={propertySetup.state} onChange={(e) => setPropertyField('state', e.target.value)} /></div>
+                <div><label className={labelClass}>ZIP</label><input className={fieldClass} value={propertySetup.zip} onChange={(e) => setPropertyField('zip', e.target.value)} /></div>
+              </div>
+            </fieldset>
           )}
 
           {/* Carrier Info */}

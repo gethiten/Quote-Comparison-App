@@ -8,9 +8,10 @@ import ScoreBar from './ScoreBar'
 interface ActionPanelProps {
   comparison: Comparison
   onUpdate: (c: Comparison) => void
+  onFlagGaps?: () => void
 }
 
-export default function ActionPanel({ comparison, onUpdate }: ActionPanelProps) {
+export default function ActionPanel({ comparison, onUpdate, onFlagGaps }: ActionPanelProps) {
   const [showScoring, setShowScoring] = useState(false)
   const [showAiOverlay, setShowAiOverlay] = useState(false)
   const [weights, setWeights] = useState<ScoreWeights>(comparison.scoreWeights)
@@ -184,7 +185,7 @@ export default function ActionPanel({ comparison, onUpdate }: ActionPanelProps) 
   return (
     <div className="border-t border-slate-200 bg-white">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200 flex-wrap">
-        <Button variant="danger" onClick={() => alert('Gap flags are shown in the comparison grid.')}>
+        <Button variant="danger" onClick={() => onFlagGaps?.()}>
           <span className="text-xs">⚑</span> Flag Gaps
         </Button>
         <Button

@@ -17,6 +17,7 @@ interface ComparisonViewProps {
 
 export default function ComparisonView({ comparisons, selectedCarriers = {}, onUpdateComparison, onRefresh, showQuoteForm: externalShowForm, onShowQuoteFormChange }: ComparisonViewProps) {
   const [activeTab, setActiveTab] = useState(0)
+  const [gapFocusSignal, setGapFocusSignal] = useState(0)
 
   const showQuoteForm = externalShowForm ?? false
   const setShowQuoteForm = onShowQuoteFormChange ?? (() => {})
@@ -35,38 +36,39 @@ export default function ComparisonView({ comparisons, selectedCarriers = {}, onU
           <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
             <h2 className="text-lg font-bold text-navy-dark">No quote comparisons yet</h2>
             <p className="mt-2 text-sm text-slate-500">
-              The database is currently empty. Create or upload a property first, then the quote comparison grid will appear here.
+              Start by uploading a quote document or entering the first quote manually from the UI.
             </p>
+            <div className="mt-4">
+              <button
+                onClick={() => setShowQuoteForm(true)}
+                className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+              >
+                Add First Quote
+              </button>
+            </div>
           </div>
         </div>
         {showQuoteForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-navy-dark">Cannot add a quote yet</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                A quote must be attached to a property. Since there are no properties or comparisons loaded yet, please upload or create one first.
-              </p>
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => setShowQuoteForm(false)}
-                  className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
+          <QuoteIngestionForm
+            onSubmit={() => {
+              setShowQuoteForm(false)
+              onRefresh?.()
+            }}
+            onCancel={() => setShowQuoteForm(false)}
+          />
         )}
       </>
     )
   }
 
   const handleAddQuote = (quote: CarrierQuote) => {
-    const updated: Comparison = {
-      ...sourceComparison,
-      quotes: [...sourceComparison.quotes, quote],
+    if (sourceComparison) {
+      const updated: Comparison = {
+        ...sourceComparison,
+        quotes: [...sourceComparison.quotes, quote],
+      }
+      onUpdateComparison?.(updated)
     }
-    onUpdateComparison?.(updated)
     setShowQuoteForm(false)
     onRefresh?.()
   }
@@ -91,8 +93,12 @@ export default function ComparisonView({ comparisons, selectedCarriers = {}, onU
         onAddQuote={() => setShowQuoteForm(true)}
       />
       <div className="flex-1 overflow-y-auto">
-        <ActionPanel comparison={comparison} onUpdate={handleComparisonUpdate} />
-        <ComparisonGrid comparison={comparison} />
+        <ActionPanel
+          comparison={comparison}
+          onUpdate={handleComparisonUpdate}
+          onFlagGaps={() => setGapFocusSignal((value) => value + 1)}
+        />
+        <ComparisonGrid comparison={comparison} focusGapsSignal={gapFocusSignal} />
       </div>
       {showQuoteForm && (
         <QuoteIngestionForm

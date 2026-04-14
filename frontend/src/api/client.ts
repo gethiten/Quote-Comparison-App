@@ -278,6 +278,31 @@ export async function uploadQuoteFile(file: File): Promise<{
   return res.json()
 }
 
+export async function createAccount(data: {
+  client_name: string
+  address?: string
+}): Promise<ApiAccount> {
+  return request('/accounts', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function createProperty(data: {
+  account_id: string
+  address: string
+  city?: string
+  state?: string
+  zip?: string
+  type: string
+  sub_type?: string
+  sq_footage?: number
+  year_built?: number
+  stories?: number
+  construction?: string
+  sprinklered?: boolean
+  insured_value: number
+}): Promise<ApiProperty> {
+  return request('/properties', { method: 'POST', body: JSON.stringify(data) })
+}
+
 export async function createQuote(data: {
   property_id: string
   carrier_id: string
