@@ -90,11 +90,9 @@ export default function ComparisonView({ comparisons, selectedCarriers = {}, onU
         onChangeTab={setActiveTab}
         onAddQuote={() => setShowQuoteForm(true)}
       />
-      <div className="flex-1 overflow-hidden flex">
-        <div className="flex-1 overflow-y-auto">
-          <ComparisonGrid comparison={comparison} />
-        </div>
+      <div className="flex-1 overflow-y-auto">
         <ActionPanel comparison={comparison} onUpdate={handleComparisonUpdate} />
+        <ComparisonGrid comparison={comparison} />
       </div>
       {showQuoteForm && (
         <QuoteIngestionForm
